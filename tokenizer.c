@@ -1,13 +1,19 @@
 /*
- * tokenizer.c
+ * I can't speak for it's efficiency or the cleanliness of this code, but it should get you started. 
  */
 #include <stdio.h>
+#include <stdlib.h>
+#include <ctype.h>
+#include <string.h>
 
 /*
  * Tokenizer type.  You need to fill in the type as part of your implementation.
  */
 
 struct TokenizerT_ {
+	char *contents;
+	char *tokentype;
+	struct TokenizerT_ *next;
 };
 
 typedef struct TokenizerT_ TokenizerT;
@@ -22,13 +28,51 @@ typedef struct TokenizerT_ TokenizerT;
  *
  * If the function succeeds, it returns a non-NULL TokenizerT.
  * Else it returns NULL.
- *
  * You need to fill in this function as part of your implementation.
  */
 
 TokenizerT *TKCreate( char * ts ) {
-
-  return NULL;
+	printf("In Create: %s \n", ts);
+	
+	int i;
+	int start=0;
+	int end=0;
+	TokenizerT *words = (struct TokenizerT_ *)malloc(sizeof(struct TokenizerT_));
+	words->contents=(char *)(malloc(sizeof(char)*5));
+	TokenizerT *head = words;
+	for(i=0;i<strlen(ts);i++)
+	{
+		//printf("current char: %c\n", ts[i]); //this outputs spaces as well
+		if(isspace(ts[i])==0)
+		{
+			if(isalpha(ts[i])!=0)
+			{
+			
+				int g = 0;
+				words->tokentype="WORD";
+				while(isspace(ts[i])==0 &&isalpha(ts[i])!=0)
+				{
+					//printf("char %c\n", ts[i]);
+					words->contents[g]=ts[i];
+					g++;
+					if(g >= 5)
+					{
+						//printf("in");
+						words->contents=realloc(words->contents, g*sizeof(char));
+					}
+					//printf("out");
+					i++;
+				}
+				words->next=(struct TokenizerT_ *)malloc(sizeof(struct TokenizerT_));
+				//printf("contents=%s\n", words->contents);
+				words=words->next;
+				words->contents=(char *)(malloc(sizeof(char)*5));
+				
+			}
+		}
+	}
+	return head;
+ 	 //return NULL;
 }
 
 /*
@@ -66,6 +110,16 @@ char *TKGetNextToken( TokenizerT * tk ) {
  */
 
 int main(int argc, char **argv) {
+	
+	printf("Input: %s \n", argv[1]);
+	TokenizerT *tokens = TKCreate(argv[1]);
+	
+	while(tokens!=NULL)
+	{
+		printf("INMAIN: %s \t %s\n", tokens->contents,tokens->tokentype);
+		tokens=tokens->next;
+	}	
+  	return 0;
 
-  return 0;
+
 }
