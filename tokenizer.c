@@ -1,5 +1,5 @@
 /*
- * I can't speak for it's efficiency or the cleanliness of this code, but it should get you started. 
+ * tokenizer.c
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -42,15 +42,15 @@ TokenizerT *TKCreate( char * ts ) {
 	TokenizerT *head = words;
 	for(i=0;i<strlen(ts);i++)
 	{
-		//printf("current char: %c\n", ts[i]); //this outputs spaces as well
-		if(isspace(ts[i])==0)
-		{
-			if(isalpha(ts[i])!=0)
+		printf("current char: %c\n", ts[i]); //this outputs spaces as well
+		//if(isspace(ts[i])==0)
+		//{
+			if(isalpha(ts[i]))
 			{
-			
+				
 				int g = 0;
 				words->tokentype="WORD";
-				while(isspace(ts[i])==0 &&isalpha(ts[i])!=0)
+				while(isalpha(ts[i]))
 				{
 					//printf("char %c\n", ts[i]);
 					words->contents[g]=ts[i];
@@ -69,7 +69,32 @@ TokenizerT *TKCreate( char * ts ) {
 				words->contents=(char *)(malloc(sizeof(char)*5));
 				
 			}
-		}
+			else if(ts[i]=='0')
+			{ 
+				//make an ishex function
+				printf("check");
+				if(ts[i]=='0' && ts[i+1]=='x' && (isdigit(ts[i+2]!=0) || ('a'<=ts[i+2]<='f') || ('A'<=ts[i+2]<='F')))
+					{
+						words->tokentype="HEXADECIMAL";
+						int g = 2;
+						i=i+2;
+						words->contents[0]='0';
+						words->contents[1]='x';
+						while(isdigit(ts[i])!=0 || ('a'<=ts[i]<='f') || ('A'<=ts[i]<='F'))
+						{
+							words->contents[g]=ts[i];
+							g++;
+							if(g>=5)
+								words->contents=realloc(words->contents, g*sizeof(char));
+							i++;		
+						}
+						words->next=(struct TokenizerT_ *)malloc(sizeof(struct TokenizerT_));
+						words=words->next;
+						words->contents=(char *)(malloc(sizeof(char)*5));	
+					}
+			}
+
+	//	}
 	}
 	return head;
  	 //return NULL;
