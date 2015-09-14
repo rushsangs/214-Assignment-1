@@ -110,12 +110,12 @@ char *TKGetNextToken( TokenizerT * tk ) {
 	int wordlength=0; //counts the length of token to be generated
 	while(i<strlen(tk->words))
 	{
-		printf("current char: %c\n", tk->words[i]); //this outputs spaces as well
+		// printf("current char: %c\n", tk->words[i]); //this outputs spaces as well
 		if(isspace((int)tk->words[i])==0)  			//the character is NOT a whitespace
 		{
 			flag = 1;
 			token[wordlength]=tk->words[i];
-			wordlength++;
+			wordlength++;							//need to keep a check on whether its alpha/numbers/etc. and "continue" if token type changes suddenly!
 			if(wordlength%5==4 && wordlength>4 )
 			{
 				token=realloc(token, 5*sizeof(char));
@@ -137,6 +137,41 @@ char *TKGetNextToken( TokenizerT * tk ) {
 
 	
   return 0;
+}
+
+char *GetTokenType( char *token)
+{
+	enum TokenizerState tstate=INIT;
+	int i;
+	if(isalpha(token[0]))
+	{
+		//keep checking incase we come across special characters, if not, return "word". If yes, call getTokenType on new string!
+	}
+	for(i=0;i<strlen(token),i++)
+	{
+		tstate=getNextState(token[i], tstate);
+	}
+	switch(tstate){
+		case INIT:
+			return "error";
+		case TS_STATE0:
+			return "zero";
+		// and so on?
+
+	}	
+}
+
+enum TokenizerState getNextState(char nextchar, enum TokenizerState currentState)
+{
+	switch(tstate){
+		case INIT:
+			if(nextchar=='0')
+				return TS_STATE0;
+			else if(isdigit(nextchar))
+				return TS_STATE1;
+			// all possibilities as per the FSM
+	}
+
 }
 
 /*
