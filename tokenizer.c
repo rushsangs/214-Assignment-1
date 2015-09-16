@@ -6,6 +6,9 @@
 #include <stdlib.h>
 #include <ctype.h>
 
+
+char *tokentype(char *token);
+
 /*
  * Tokenizer type.  You need to fill in the type as part of your implementation.
  */
@@ -37,14 +40,20 @@
 /*  Enum declaration
 *  Each state should stand for one circle in the FSM Brian provided. TBD 
 */
-enum TokenizerState {
+enum TokenizerState{
 		INIT,
 		TS_STATE0,					//different states as in the FSM
 		TS_STATE1,
-		TS_STATE2
+		TS_STATE2,
+		TS_STATE3,
+		TS_STATE4,
+		TS_STATE5,
+		TS_STATE6,
+		TS_STATE7,
+		MAL
 	};
 
-struct TokenizerT_ {
+struct TokenizerT_{
 	char *words;					// The entire string given by the user
 	int currentPos;					// The current position we are at in the string
 	enum TokenizerState tstate;			// might not be necessary in the struct
@@ -53,6 +62,7 @@ struct TokenizerT_ {
 
 
 typedef struct TokenizerT_ TokenizerT;
+typedef enum TokenizerState TokenizerState;
 
 /*
  * TKCreate creates a new TokenizerT object for a given token stream
@@ -101,8 +111,81 @@ void TKDestroy( TokenizerT * tk ) {
  * You need to fill in this function as part of your implementation.
  */
 
+enum TokenizerState getNextState(char nextchar, enum TokenizerState tstate)
+{
+	switch(tstate){
+		case INIT:
+			if(nextchar=='0')
+			{
+				return TS_STATE0;
+			}
+			else if(isdigit(nextchar))
+			{
+				return TS_STATE1;
+			}
+		case TS_STATE0:
+			if(nextchar=='x' || nextchar=='X')
+				return TS_STATE2;
+			else if ('0'<=nextchar && nextchar <='7')
+				return TS_STATE3;
+			else if(nextchar=='.')
+				return TS_STATE4;
+			else if(isdigit(nextchar))
+				return TS_STATE1;
+			else
+				return MAL;
+		case TS_STATE1:
+			if(isdigit(nextchar))
+				return TS_STATE1;
+			else if(nextchar=='.')
+				return TS_STATE4;
+			else if (nextchar=='e' || nextchar=='E')
+				return TS_STATE6;
+		case TS_STATE2:
+			if(isxdigit(nextchar))
+				return TS_STATE2;
+			else
+				return MAL;
+		case TS_STATE3:
+			if('0'<=nextchar && nextchar <='7')
+				return TS_STATE3;
+			else
+				return MAL;
+		case TS_STATE4:
+			if(isdigit(nextchar))
+				return TS_STATE5;
+			else
+				return MAL;
+		case TS_STATE5:
+			if(isdigit(nextchar))
+				return TS_STATE5;
+			else if(nextchar=='e' || nextchar=='E')
+				return TS_STATE6;
+			else 
+				return MAL;
+		case TS_STATE6:
+			if(isdigit(nextchar))
+				return TS_STATE6;
+			else if(nextchar=='+'||nextchar=='-')
+				return TS_STATE7;
+			else
+				return MAL;
+		case TS_STATE7:
+				if(isdigit(nextchar))
+					return TS_STATE7;	
+				else
+					return MAL;
+		case MAL:
+			return MAL;
+		
+			// all possibilities as per the FSM
+	}
+	return MAL;
+
+}
+
 char *TKGetNextToken( TokenizerT * tk ) {
-	printf("Entered next token \n");
+	//printf("Entered next token \n");
 	int i=tk->currentPos;
 	int flag=0;
 
@@ -110,21 +193,21 @@ char *TKGetNextToken( TokenizerT * tk ) {
 	int wordlength=0; //counts the length of token to be generated
 	while(i<strlen(tk->words))
 	{
-		// printf("current char: %c\n", tk->words[i]); //this outputs spaces as well
+		//printf("current char: %c\n", tk->words[i]); //this outputs spaces as well
 		if(isspace((int)tk->words[i])==0)  			//the character is NOT a whitespace
 		{
 			flag = 1;
 			token[wordlength]=tk->words[i];
-			wordlength++;							//need to keep a check on whether its alpha/numbers/etc. and "continue" if token type changes suddenly!
+			wordlength++;
 			if(wordlength%5==4 && wordlength>4 )
 			{
-				token=realloc(token, 5*sizeof(char));
+				token=realloc(token, 5*sizeof(char)); //minor problem here, may not be resizing correcyly for bigger strings 12345678910111213141516
 			}
 		}
 		else if(flag==1)
 		{
 			tk->currentPos=i;
-			printf("Ending next token \n");
+			//printf("Ending next token \n");
 			return token;
 		}
 		++i;
@@ -139,15 +222,27 @@ char *TKGetNextToken( TokenizerT * tk ) {
   return 0;
 }
 
+/*
+ *tokentype identifies what type of token, prints it out onto screen
+*/
 char *GetTokenType( char *token)
 {
-	enum TokenizerState tstate=INIT;
-	int i;
+	enum TokenizerState tstate;
+	tstate=INIT;
+	int i=0;
 	if(isalpha(token[0]))
 	{
 		//keep checking incase we come across special characters, if not, return "word". If yes, call getTokenType on new string!
+		while(i<strlen(token) && isalnum(token[i]))
+			i++;
+		if(i==strlen(token))
+			return "WORD";
+		else
+		{
+			//GetTokenType(token[i]);
+		}		
 	}
-	for(i=0;i<strlen(token),i++)
+	for(i=0;i<strlen(token);i++)
 	{
 		tstate=getNextState(token[i], tstate);
 	}
@@ -156,22 +251,22 @@ char *GetTokenType( char *token)
 			return "error";
 		case TS_STATE0:
 			return "zero";
+		case TS_STATE1:
+			return "digit";
+		case TS_STATE2:
+			return "hexadecimal";
+		case TS_STATE3:
+			return "octal";
+		case TS_STATE4:
+		case TS_STATE5:
+		case TS_STATE6:
+		case TS_STATE7:
+			return "float";
+		case MAL:
+			return "error in input";
 		// and so on?
 
 	}	
-}
-
-enum TokenizerState getNextState(char nextchar, enum TokenizerState currentState)
-{
-	switch(tstate){
-		case INIT:
-			if(nextchar=='0')
-				return TS_STATE0;
-			else if(isdigit(nextchar))
-				return TS_STATE1;
-			// all possibilities as per the FSM
-	}
-
 }
 
 /*
@@ -180,6 +275,9 @@ enum TokenizerState getNextState(char nextchar, enum TokenizerState currentState
  * Print out the tokens in the second string in left-to-right order.
  * Each token should be printed on a separate line.
  */
+
+
+
 
 
 int main(int argc, char **argv) {
@@ -192,7 +290,9 @@ int main(int argc, char **argv) {
 	{
 		//printf("INMAIN: %s \t %s\n", tokens->contents,tokens->tokentype);
 		printf("Token is %s \n",token);
+		printf("Token type is: %s \n", GetTokenType(token));
 		token=TKGetNextToken(TObject);
+		
 	}	
   	return 0;
 }
