@@ -81,7 +81,7 @@ typedef enum TokenizerState TokenizerState;
 TokenizerT *TKCreate( char * ts ) {
 	printf("Creating Tokenizer.. \n");
 	TokenizerT  *TObject = (TokenizerT *)malloc(sizeof(TokenizerT));
-	TObject->words= (char *)malloc(5*sizeof(char));	
+	TObject->words= (char *)malloc(strlen(ts)*sizeof(char));	//testing this used to be 5
 	strcpy(TObject->words, ts);
 	printf("Tokenizer created: %s  \n",TObject->words);
 	if(TObject!=NULL)
@@ -96,7 +96,8 @@ TokenizerT *TKCreate( char * ts ) {
  * You need to fill in this function as part of your implementation.
  */
 
-void TKDestroy( TokenizerT * tk ) {
+void TKDestroy(TokenizerT * tk){
+	free(tk);	
 }
 
 /*
@@ -199,9 +200,10 @@ char *TKGetNextToken( TokenizerT * tk ) {
 			flag = 1;
 			token[wordlength]=tk->words[i];
 			wordlength++;
-			if(wordlength%5==4 && wordlength>4 )
+			//if(wordlength%5==4 && wordlength>4)
+			if(wordlength>=5)
 			{
-				token=realloc(token, 5*sizeof(char)); //minor problem here, may not be resizing correcyly for bigger strings 12345678910111213141516
+				token=realloc(token, wordlength*sizeof(char)); //testing realloc here too, used to be 5
 			}
 		}
 		else if(flag==1)
@@ -264,8 +266,9 @@ char *GetTokenType( char *token)
 			return "float";
 		case MAL:
 			return "error in input";
+		default:
+			return "error in input";
 		// and so on?
-
 	}	
 }
 
@@ -291,8 +294,10 @@ int main(int argc, char **argv) {
 		//printf("INMAIN: %s \t %s\n", tokens->contents,tokens->tokentype);
 		printf("Token is %s \n",token);
 		printf("Token type is: %s \n", GetTokenType(token));
-		token=TKGetNextToken(TObject);
-		
-	}	
+		token=TKGetNextToken(TObject);		
+	}
+
+	TKDestroy(TObject);	
   	return 0;
 }
+
