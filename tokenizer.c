@@ -142,6 +142,8 @@ enum TokenizerState getNextState(char nextchar, enum TokenizerState tstate)
 				return TS_STATE4;
 			else if (nextchar=='e' || nextchar=='E')
 				return TS_STATE6;
+			else
+				return MAL;
 		case TS_STATE2:
 			if(isxdigit(nextchar))
 				return TS_STATE2;
