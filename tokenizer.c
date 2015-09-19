@@ -40,6 +40,7 @@ char *tokentype(char *token);
 /*  Enum declaration
 *  Each state should stand for one circle in the FSM Brian provided. TBD 
 */
+
 enum TokenizerState{
 		INIT,
 		TS_STATE0,					//different states as in the FSM
@@ -50,7 +51,9 @@ enum TokenizerState{
 		TS_STATE5,
 		TS_STATE6,
 		TS_STATE7,
-		MAL
+		MAL,
+		SPECIAL_CHAR,
+		ALPHA
 	};
 
 struct TokenizerT_{
@@ -59,6 +62,36 @@ struct TokenizerT_{
 	enum TokenizerState tstate;			// might not be necessary in the struct
 };
 
+//Special characters declaration
+const char *special_chars[27][2]={
+	{"+","plus"},
+	{"-","dash"},
+	{".","period"},
+	{"*","asterisk"},
+	{"/","forward slash"},
+	{"!","exclamation"},
+	{"@","at"},
+	{"#","hash"},
+	{"$","dollar"},
+	{"%","modulus"},			
+	{"^","power"},
+	{"[","left brace"},
+	{"]","right brace"},
+	{"{","left curly brace"},
+	{"}","right curly brace"},
+	{"(","left round brace"},
+	{")","right round brace"},
+	{"=","equals"},
+	{"_","underscore"},
+	{"~","tilde"},
+	{":","colon"},
+	{";","semicolon"},
+	{",","comma"},
+	{"<","less than"},
+	{">","greater than"},
+	{"|","or"},
+	{"?","question mark"}
+};
 
 
 typedef struct TokenizerT_ TokenizerT;
@@ -89,6 +122,21 @@ TokenizerT *TKCreate( char * ts ) {
   return NULL;
 }
 
+//function to check for special characters
+char * isSpecialChar(char * word){
+	int i;
+	for(i=0;i<27;++i)
+	{
+		if(strcmp(special_chars[i][0],word)==0)
+		{
+			// printf("%s \n", special_chars[i][1]);
+			return special_chars[i][1];
+		}
+	}
+	return "error";
+
+}
+
 /*
  * TKDestroy destroys a TokenizerT object.  It should free all dynamically
  * allocated memory that is part of the object being destroyed.
@@ -97,6 +145,7 @@ TokenizerT *TKCreate( char * ts ) {
  */
 
 void TKDestroy(TokenizerT * tk){
+	free(tk->words);
 	free(tk);	
 }
 
@@ -118,12 +167,19 @@ enum TokenizerState getNextState(char nextchar, enum TokenizerState tstate)
 		case INIT:
 			if(nextchar=='0')
 			{
+				// printf("%d line\n",__LINE__);
 				return TS_STATE0;
 			}
 			else if(isdigit(nextchar))
 			{
+				// printf("%d line\n",__LINE__);
 				return TS_STATE1;
 			}
+			// if(nextchar=="")
+			// {
+			// 								//todo: escape characters!
+			// }
+			return SPECIAL_CHAR;
 		case TS_STATE0:
 			if(nextchar=='x' || nextchar=='X')
 				return TS_STATE2;
@@ -191,7 +247,6 @@ char *TKGetNextToken( TokenizerT * tk ) {
 	//printf("Entered next token \n");
 	int i=tk->currentPos;
 	int flag=0;
-
 	char *token = (char *)(malloc(sizeof(char)*5));
 	int wordlength=0; //counts the length of token to be generated
 	while(i<strlen(tk->words))
@@ -266,8 +321,10 @@ char *GetTokenType( char *token)
 		case TS_STATE6:
 		case TS_STATE7:
 			return "float";
+		case SPECIAL_CHAR:
+			return isSpecialChar(token);
 		case MAL:
-			return "error in input";
+			return "error in input1";
 		default:
 			return "error in input";
 		// and so on?
@@ -286,7 +343,6 @@ char *GetTokenType( char *token)
 
 
 int main(int argc, char **argv) {
-	
 	printf("Input: %s \n", argv[1]);
 	TokenizerT *  TObject = TKCreate(argv[1]);
 	TObject->tstate=INIT;
@@ -302,4 +358,3 @@ int main(int argc, char **argv) {
 	TKDestroy(TObject);	
   	return 0;
 }
-
