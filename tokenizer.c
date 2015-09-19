@@ -63,7 +63,7 @@ struct TokenizerT_{
 };
 
 //Special characters declaration
-const char *special_chars[27][2]={
+const char *special_chars[45][2]={
 	{"+","plus"},
 	{"-","dash"},
 	{".","period"},
@@ -90,7 +90,25 @@ const char *special_chars[27][2]={
 	{"<","less than"},
 	{">","greater than"},
 	{"|","or"},
-	{"?","question mark"}
+	{"?","question mark"},
+	{"->","structure pointer"},
+	{"++","increment"},
+	{"--","decrement"},
+	{">>","right shift"},
+	{"<<","left shift"},
+	{"<=","less than equals"},
+	{">=","greater than equals"},
+	{"==","equals check"},
+	{"!=","not equals"},
+	{"&&","logical and"},
+	{"||","logical or"},
+	{"+=","plus equals"},
+	{"-=","minus equals"},
+	{"*=","star equals"},
+	{"/=","divide equals"},
+	{"%=","modulus equals"},
+	{"&=","and equals"},
+	{"|=","or equals"}
 };
 
 
@@ -125,11 +143,11 @@ TokenizerT *TKCreate( char * ts ) {
 //function to check for special characters
 char * isSpecialChar(char * word){
 	int i;
-	for(i=0;i<27;++i)
+	for(i=0;i<45;++i)
 	{
 		if(strcmp(special_chars[i][0],word)==0)
 		{
-			// printf("%s \n", special_chars[i][1]);
+			printf("%s \n", special_chars[i][1]);
 			return special_chars[i][1];
 		}
 	}
@@ -149,17 +167,6 @@ void TKDestroy(TokenizerT * tk){
 	free(tk);	
 }
 
-/*
- * TKGetNextToken returns the next token from the token stream as a
- * character string.  Space for the returned token should be dynamically
- * allocated.  The caller is responsible for freeing the space once it is
- * no longer needed.
- *
- * If the function succeeds, it returns a C string (delimited by '\0')
- * containing the token.  Else it returns 0.
- *
- * You need to fill in this function as part of your implementation.
- */
 
 enum TokenizerState getNextState(char nextchar, enum TokenizerState tstate)
 {
@@ -179,6 +186,7 @@ enum TokenizerState getNextState(char nextchar, enum TokenizerState tstate)
 			// {
 			// 								//todo: escape characters!
 			// }
+			// printf("%d line\n",__LINE__);
 			return SPECIAL_CHAR;
 		case TS_STATE0:
 			if(nextchar=='x' || nextchar=='X')
@@ -234,6 +242,9 @@ enum TokenizerState getNextState(char nextchar, enum TokenizerState tstate)
 					return TS_STATE7;	
 				else
 					return MAL;
+		case SPECIAL_CHAR:
+				if(isdigit(nextchar)==0&&isalpha(nextchar)==0)
+					return SPECIAL_CHAR;
 		case MAL:
 			return MAL;
 		
@@ -243,35 +254,115 @@ enum TokenizerState getNextState(char nextchar, enum TokenizerState tstate)
 
 }
 
+
+/*
+ * TKGetNextToken returns the next token from the token stream as a
+ * character string.  Space for the returned token should be dynamically
+ * allocated.  The caller is responsible for freeing the space once it is
+ * no longer needed.
+ *
+ * If the function succeeds, it returns a C string (delimited by '\0')
+ * containing the token.  Else it returns 0.
+ *
+ * You need to fill in this function as part of your implementation.
+ */
+
 char *TKGetNextToken( TokenizerT * tk ) {
 	//printf("Entered next token \n");
 	int i=tk->currentPos;
-	int flag=0;
-	char *token = (char *)(malloc(sizeof(char)*5));
+	
+	/*FLAG LOGIC: 
+	0- token not started yet, 
+	1- token started with alphabets, 
+	2- token started with numbers, 
+	3-token started but contains special characters, 
+	4-token contains a mix of aplha and num
+	5-token contains num and special characters nd alpha
+	/main flag stores the main flag when we start the token, and current flag stores the flag updated while traversing through the token
+	*/
+	int firstflag=0;
+	int mainflag=0;
+	int j=i;
+
+	char *token;
 	int wordlength=0; //counts the length of token to be generated
 	while(i<strlen(tk->words))
 	{
 		//printf("current char: %c\n", tk->words[i]); //this outputs spaces as well
-		if(isspace((int)tk->words[i])==0)  			//the character is NOT a whitespace
+		if(isspace((int)tk->words[i])==0)  			//the character is NOT a whitespace, which means token started
 		{
-			flag = 1;
-			token[wordlength]=tk->words[i];
-			wordlength++;
-			//if(wordlength%5==4 && wordlength>4)
-			if(wordlength>=5)
+			if(isalpha((int)tk->words[i]))
 			{
-				token=realloc(token, wordlength*sizeof(char)); //testing realloc here too, used to be 5
+				// printf("%d is line \n", __LINE__);
+				if(mainflag==0||mainflag==1)
+					mainflag = 1;
+				else if(mainflag==2||mainflag==4)
+					mainflag = 4;
+				else if(mainflag ==5)
+					mainflag=5;
+				else
+				{
+					break;
+				}
+
 			}
+			else if(isdigit((int)tk->words[i]))
+			{
+				if(mainflag==0||mainflag==2)
+					mainflag = 2;
+				else if(mainflag==1||mainflag==4)
+					mainflag=4;
+				else if(mainflag==5)
+				{
+					mainflag=5;
+				}
+				else
+				{
+					break;
+				}
+			}
+			else 									// it is a special character!
+			{
+				//should continue considering it as a token if only numbers are found and only tokens are found, and only alphanumeric is found
+				if(mainflag==0||mainflag==3)
+				{
+					mainflag=3;
+				}
+				else if(mainflag==2||mainflag==4)
+				{
+					mainflag=5;
+				}
+				else
+				{
+					break;
+					//break!
+				}
+			}
+			
 		}
-		else if(flag==1)
+		else if(mainflag!=0)
 		{
 			tk->currentPos=i;
 			//printf("Ending next token \n");
-			return token;
+			break;
 		}
+		else
+		{
+			++i;
+			j=i;
+			continue;
+		}
+		// printf("%d is line where i is about to be increased \n", __LINE__);
 		++i;
 	}
-	if(flag==1)
+	// now our token is from j to i excluding i
+	int k;
+	token = (char *)(malloc(sizeof(char)*(i-j)));
+	for(k=0;k<(i-j);++k)
+	{
+		token[k]=tk->words[j+k];	
+	}
+	if(mainflag!=0)
 	{
 		tk->currentPos=i;
 		return token;
