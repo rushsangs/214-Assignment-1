@@ -52,8 +52,7 @@ enum TokenizerState{
 		TS_STATE6,
 		TS_STATE7,
 		MAL,
-		SPECIAL_CHAR,
-		ALPHA
+		SPECIAL_CHAR
 	};
 
 struct TokenizerT_{
@@ -148,7 +147,7 @@ char * isSpecialChar(char * word){
 		if(strcmp(special_chars[i][0],word)==0)
 		{
 			printf("%s \n", special_chars[i][1]);
-			return special_chars[i][1];
+			return (char *)special_chars[i][1];
 		}
 	}
 	return "error";
@@ -173,20 +172,9 @@ enum TokenizerState getNextState(char nextchar, enum TokenizerState tstate)
 	switch(tstate){
 		case INIT:
 			if(nextchar=='0')
-			{
-				// printf("%d line\n",__LINE__);
 				return TS_STATE0;
-			}
 			else if(isdigit(nextchar))
-			{
-				// printf("%d line\n",__LINE__);
 				return TS_STATE1;
-			}
-			// if(nextchar=="")
-			// {
-			// 								//todo: escape characters!
-			// }
-			// printf("%d line\n",__LINE__);
 			return SPECIAL_CHAR;
 		case TS_STATE0:
 			if(nextchar=='x' || nextchar=='X')
@@ -255,6 +243,26 @@ enum TokenizerState getNextState(char nextchar, enum TokenizerState tstate)
 }
 
 
+char *isEscape(char a, char b)
+{
+	if(a=='\\')
+	{
+		if(b=='n')
+			return "[0x0A]";
+		else if(b=='t')
+			return "[0x09]";
+		else if(b=='\'')
+			return "[0x27]";
+		else if(b=='r')
+			return "[0x0D]";
+		else if(b=='f')
+			return "[0x0C]";
+		else if(b=='\\')
+			return "[0x5C]";		
+	}
+	return "okay";
+}
+
 /*
  * TKGetNextToken returns the next token from the token stream as a
  * character string.  Space for the returned token should be dynamically
@@ -280,12 +288,12 @@ char *TKGetNextToken( TokenizerT * tk ) {
 	5-token contains num and special characters nd alpha
 	/main flag stores the main flag when we start the token, and current flag stores the flag updated while traversing through the token
 	*/
-	int firstflag=0;
+	//int firstflag=0; this wasn't being used
 	int mainflag=0;
 	int j=i;
 
 	char *token;
-	int wordlength=0; //counts the length of token to be generated
+	//int wordlength=0; wasn't being used
 	while(i<strlen(tk->words))
 	{
 		//printf("current char: %c\n", tk->words[i]); //this outputs spaces as well
@@ -319,6 +327,15 @@ char *TKGetNextToken( TokenizerT * tk ) {
 				else
 				{
 					break;
+				}
+			}
+			else if((tk->words[i]=='\\')&&(i+1<strlen(tk->words)))
+			{
+				char *hexcode = isEscape(tk->words[i], tk->words[i+1]);
+				if(strcmp(hexcode,"okay")!=0)
+				{
+					printf("error %s", hexcode);
+					exit(0);
 				}
 			}
 			else 									// it is a special character!
