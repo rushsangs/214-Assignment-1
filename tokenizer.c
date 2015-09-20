@@ -146,7 +146,7 @@ char * isSpecialChar(char * word){
 	{
 		if(strcmp(special_chars[i][0],word)==0)
 		{
-			printf("%s \n", special_chars[i][1]);
+			// printf("%s \n", special_chars[i][1]);
 			return (char *)special_chars[i][1];
 		}
 	}
@@ -334,7 +334,7 @@ char *TKGetNextToken( TokenizerT * tk ) {
 				char *hexcode = isEscape(tk->words[i], tk->words[i+1]);
 				if(strcmp(hexcode,"okay")!=0)
 				{
-					printf("error %s", hexcode);
+					printf("\x1B[2;35m error %s \n \x1B[0m", hexcode);
 					exit(0);
 				}
 			}
@@ -432,7 +432,7 @@ char *GetTokenType( char *token)
 		case SPECIAL_CHAR:
 			return isSpecialChar(token);
 		case MAL:
-			return "error in input1";
+			return "malicious";
 		default:
 			return "error in input";
 		// and so on?
@@ -458,8 +458,7 @@ int main(int argc, char **argv) {
 	while(token!=0)
 	{
 		//printf("INMAIN: %s \t %s\n", tokens->contents,tokens->tokentype);
-		printf("Token is %s \n",token);
-		printf("Token type is: %s \n", GetTokenType(token));
+		printf("Token is %s and token type is %s \n",token, GetTokenType(token));
 		token=TKGetNextToken(TObject);		
 	}
 
