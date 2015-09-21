@@ -1,0 +1,55 @@
+INPUT: Hello world! This is CS214
+OUTPUT: 
+Tokenizer created: Hello world! This is CS214
+Token is Hello and token type is WORD
+Token is world and token type is WORD
+Token is ! and token type is exclamation
+Token is This and token type is WORD
+Token is is and token type is WORD
+Token is CS214 and token type is WORD
+
+INPUT: 34.5 - 12 = ? (we are playing with numbers)
+OUTPUT:
+Creating Tokenizer..
+Tokenizer created: 34.5 - 12 = ? (we are playing with numbers)
+Token is 34.5 and token type is float
+Token is - and token type is dash
+Token is 12 and token type is digit
+Token is = and token type is equals
+Token is ? and token type is question mark
+Token is ( and token type is left round brace
+Token is we and token type is WORD
+Token is are and token type is WORD
+Token is playing and token type is WORD
+Token is with and token type is WORD
+Token is numbers and token type is WORD
+Token is ) and token type is right round brace
+
+INPUT: 0x78 is valid but 0xQW isnt. 0.5e34 is valid but 51.e is not.
+OUTPUT:
+Token is 0x78 and token type is hexadecimal
+Token is is and token type is WORD
+Token is valid and token type is WORD
+Token is but and token type is WORD
+Token is 0xQW and token type is malicious
+Token is isnt and token type is WORD
+Token is . and token type is period
+Token is 0.5e34 and token type is float
+Token is is and token type is WORD
+Token is valid and token type is WORD
+Token is but and token type is WORD
+Token is 51.e and token type is malicious
+Token is is and token type is WORD
+Token is not and token type is WORD
+Token is . and token type is period
+
+INPUT: \n is an escape character
+OUTPUT: error [0x0A]
+
+INPUT: i >> 2
+OUTPUT:
+Creating Tokenizer..
+Tokenizer created:i >> 2
+Token is i and token type is WORD
+Token is >> and token type is right shift
+Token is 2 and token type is digit
